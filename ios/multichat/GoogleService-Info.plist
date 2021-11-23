@@ -30,5 +30,7 @@
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
 	<string>1:838695630643:ios:36551e8ddd09aec0a9f046</string>
+	<key>DATABASE_URL</key>
+	<string>https://multichat-551c1-default-rtdb.firebaseio.com</string>
 </dict>
 </plist>

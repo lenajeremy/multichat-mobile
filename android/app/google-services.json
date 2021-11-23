@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "838695630643",
+    "firebase_url": "https://multichat-551c1-default-rtdb.firebaseio.com",
     "project_id": "multichat-551c1",
     "storage_bucket": "multichat-551c1.appspot.com"
   },
@@ -29,6 +30,13 @@
             {
               "client_id": "838695630643-5fsf9n6ckv6lmk1dv7080sogajslqb2h.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "838695630643-hlemgh4f3l016kna87o5i0u1dqah0288.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.reactjs.native.example.multichat"
+              }
             }
           ]
         }
