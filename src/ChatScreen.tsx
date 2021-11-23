@@ -1,14 +1,36 @@
-import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
+import { useNavigation } from '@react-navigation/core'
 
-const ChatScreen = () => {
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
+import { ScrollView } from 'react-native-gesture-handler'
+
+export const ChatScreen = () => {
+    const [user, setUser] = useState<FirebaseAuthTypes.User>()
+
+    const navigator = useNavigation()
+
+    useEffect(() => {
+        const authChangeSubscriber = auth().onAuthStateChanged(user => {
+            if(user) setUser(user)
+            else navigator.navigate('Login' as never)
+        })
+
+        return authChangeSubscriber
+    },[])
+
+    const handleLogout = () => {
+        auth().signOut()
+        // navigator.navigate('Login' as never)
+    }
+
     return (
-        <View>
+        <ScrollView>
             <Text>ChatScreen</Text>
-        </View>
+            <Pressable onPress = {handleLogout}><Text>Logout</Text></Pressable>
+            <Text>{JSON.stringify(user, null, 3)}</Text>
+        </ScrollView>
     )
 }
-
-export default ChatScreen
 
 const styles = StyleSheet.create({})
