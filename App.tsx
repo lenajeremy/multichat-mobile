@@ -1,12 +1,11 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-``
+import auth from '@react-native-firebase/auth'
 
 import { LoginScreen } from "./src/LoginScreen";
 import { ChatScreen } from './src/ChatScreen';
-import { Text } from 'react-native';
-import Header from './src/components/Header';
+import { Pressable, Text } from 'react-native';
 
 const StackNavigator = createStackNavigator()
 
@@ -28,7 +27,12 @@ const App = () => {
           name='Chat'
           component={ChatScreen}
           options = {{
-            header: () => <Header/>
+            headerStyle : {
+              backgroundColor: '#40ad40'
+            },
+            headerTitle: '',
+            headerLeft: () => <Text>GDG Ajah</Text>,
+            headerRight: () => <Pressable onPress = {() => auth().signOut()}><Text>Logout</Text></Pressable>
           }}
         />
       </StackNavigator.Navigator>

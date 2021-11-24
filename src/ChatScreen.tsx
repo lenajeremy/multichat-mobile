@@ -8,12 +8,6 @@ import db from '@react-native-firebase/database'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 
-type Message = {
-    text: string
-    createdAt: number
-    senderId: string
-}
-
 export const ChatScreen = ({ navigation }) => {
     const [user, setUser] = useState<FirebaseAuthTypes.User>()
     const [messages, setMessages] = useState<any>([])
@@ -36,6 +30,7 @@ export const ChatScreen = ({ navigation }) => {
                     else navigation.replace('Login')
                 })
 
+
         return authChangeSubscriber
     }, [])
 
@@ -52,32 +47,43 @@ export const ChatScreen = ({ navigation }) => {
     }
 
     return (
-        <React.Fragment>
-            <View style={{ flex: 1 }}>
-                <FlatList
-                    keyExtractor={(item) => item.createdAt}
-                    data={messages}
-                    renderItem={({ item }) => <ChatMessage message = {item}/>}
-                />
-                <TextInput
-                    ref={inputRef}
-                    placeholder='Send message'
-                    onSubmitEditing={sendMessage}
-                    onChangeText={setTextMessage}
-                    value={textMessage}
-                />
-                <Image source={{ uri: user?.photoURL }} style={styles.image} />
-                <Text>{user?.displayName}</Text>
-            </View>
+        <View style={{ flex: 1 }}>
+            <StatusBar barStyle='light-content' />
+            <FlatList
+                contentContainerStyle={styles.chatMessages}
+                keyExtractor={(item) => item.createdAt}
+                data={messages}
+                renderItem={({ item }) => <ChatMessage message={item} />}
+                ListFooterComponent={() => <InputController {...{inputRef, sendMessage, setTextMessage, textMessage}}/>}
+            />
             <SafeAreaView />
-        </React.Fragment>
+        </View>
     )
 }
+interface InputControllerProps{
+    inputRef: React.Ref<any>,
+    sendMessage: any,
+    setTextMessage: any,
+    textMessage: string
 
-const ChatMessage = ({message}) => {
+}
+const InputController : React.FC<InputControllerProps> = ({ inputRef, sendMessage, setTextMessage, textMessage }) => {
     return (
-        <View>
-            <Text>{JSON.stringify(message)}</Text>
+        <View style={styles.inputController}>
+            <TextInput
+                ref={inputRef}
+                placeholder='Send message'
+                onSubmitEditing={sendMessage}
+                onChangeText={setTextMessage}
+                value={textMessage}
+            />
+        </View>
+    )
+}
+const ChatMessage = ({ message }) => {
+    return (
+        <View style={styles.chatMessage}>
+            <Text>{message.text}</Text>
         </View>
     )
 }
@@ -87,5 +93,20 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 50,
+    },
+    inputController: {
+        height: 100,
+        width: '100%',
+        backgroundColor: 'green'
+    },
+    chatMessages: {
+        paddingHorizontal: 8,
+        alignItems: 'flex-start'
+    },
+    chatMessage: {
+        backgroundColor: 'green',
+        padding: 10,
+        maxWidth: '50%',
+        borderRadius: 14,
     }
 })
