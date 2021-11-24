@@ -1,0 +1,14 @@
+{
+    "messages":{
+        "1": {
+            "senderId": "the id",
+            "text": "Hello",
+            "createdAt": 13495949498
+        },
+        "2": {
+            "senderId": "another id",
+            "text": "Hi there",
+            "createdAt": 4499494039
+        }
+    }
+}
