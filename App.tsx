@@ -5,7 +5,7 @@ import auth from '@react-native-firebase/auth'
 
 import { LoginScreen } from "./src/LoginScreen";
 import { ChatScreen } from './src/ChatScreen';
-import { Pressable, Text } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
 const StackNavigator = createStackNavigator()
 
@@ -14,25 +14,25 @@ const App = () => {
     <NavigationContainer>
       <StackNavigator.Navigator
         initialRouteName='Chat'
-        // screenOptions={{ heade }}
+      // screenOptions={{ heade }}
       >
         <StackNavigator.Screen
           name="Login"
           component={LoginScreen}
-          options = {{
+          options={{
             headerShown: false
           }}
         />
         <StackNavigator.Screen
           name='Chat'
           component={ChatScreen}
-          options = {{
-            headerStyle : {
+          options={{
+            headerStyle: {
               backgroundColor: '#40ad40'
             },
             headerTitle: '',
-            headerLeft: () => <Text>GDG Ajah</Text>,
-            headerRight: () => <Pressable onPress = {() => auth().signOut()}><Text>Logout</Text></Pressable>
+            headerLeft: () => <Text style={styles.headingTitle}>GDG Ajah</Text>,
+            headerRight: () => <Pressable onPress={() => auth().signOut()}><Text style={styles.headingRight}>Logout</Text></Pressable>
           }}
         />
       </StackNavigator.Navigator>
@@ -41,3 +41,15 @@ const App = () => {
 }
 
 export default App;
+
+const styles = StyleSheet.create({
+  headingTitle: {
+    marginLeft: 14,
+    color: 'white',
+    fontSize: 20
+  },
+  headingRight: {
+    marginRight: 14,
+    color: 'white'
+  }
+})

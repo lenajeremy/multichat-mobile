@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Alert, FlatList, Image, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native'
-import { useNavigation } from '@react-navigation/core'
-import { ScrollView, TextInput } from 'react-native-gesture-handler'
+import { FlatList, Image, StatusBar, StyleSheet, Text, View } from 'react-native'
+import { TextInput } from 'react-native-gesture-handler'
 
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
 import db from '@react-native-firebase/database'
@@ -38,8 +37,8 @@ export const ChatScreen = ({ navigation }) => {
         if (textMessage) {
             db().ref('messages').push({
                 text: e.nativeEvent.text,
-                senderId: user?.uid,
-                createdAt: Date.now()
+                sender: { id: user?.uid, image: user?.photoURL, letter: user?.email?.charAt(0) },
+                createdAt: Date.now(),
             })
         }
         setTextMessage('')
@@ -47,30 +46,31 @@ export const ChatScreen = ({ navigation }) => {
     }
 
     return (
-        <View style={{ flex: 1 }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: 'white', marginTop: -40 }}>
             <StatusBar barStyle='light-content' />
             <FlatList
                 contentContainerStyle={styles.chatMessages}
                 keyExtractor={(item) => item.createdAt}
                 data={messages}
                 renderItem={({ item }) => <ChatMessage message={item} />}
-                ListFooterComponent={() => <InputController {...{inputRef, sendMessage, setTextMessage, textMessage}}/>}
+                ListFooterComponent={() => <View></View>}
             />
-            <SafeAreaView />
-        </View>
+            <InputController {...{ inputRef, sendMessage, setTextMessage, textMessage }} />
+        </SafeAreaView>
     )
 }
-interface InputControllerProps{
+interface InputControllerProps {
     inputRef: React.Ref<any>,
     sendMessage: any,
     setTextMessage: any,
     textMessage: string
 
 }
-const InputController : React.FC<InputControllerProps> = ({ inputRef, sendMessage, setTextMessage, textMessage }) => {
+const InputController: React.FC<InputControllerProps> = ({ inputRef, sendMessage, setTextMessage, textMessage }) => {
     return (
         <View style={styles.inputController}>
             <TextInput
+            style = {styles.input}
                 ref={inputRef}
                 placeholder='Send message'
                 onSubmitEditing={sendMessage}
@@ -81,32 +81,86 @@ const InputController : React.FC<InputControllerProps> = ({ inputRef, sendMessag
     )
 }
 const ChatMessage = ({ message }) => {
+
+    const isSelf = message.sender.id === auth().currentUser?.uid
+
     return (
-        <View style={styles.chatMessage}>
-            <Text>{message.text}</Text>
+        <View style = {{
+            flexDirection: 'row', 
+            alignItems: 'flex-start', 
+            marginVertical: 10,
+            alignSelf: isSelf ? 'flex-end' : 'flex-start'
+        }}>
+            {
+                !isSelf ? 
+                message.sender.image ? 
+                <Image style={styles.image} source={{ uri: message.sender.image }} /> :
+                <CircleAvatar letter = {message.sender.letter}/> :
+                null
+            }
+            <View style={[styles.chatMessage, !isSelf && styles.notSelf]}>
+                <Text style={[styles.chatText, !isSelf && {color: 'black'}]}>{message.text}</Text>
+            </View>
         </View>
     )
 }
 
+const CircleAvatar : React.FC<{letter: string}> = ({letter}) => {
+    return (
+        <View style = {[styles.image, styles.circleAvatar]}>
+            <Text style ={{fontSize: 16}}>{letter.toUpperCase()}</Text>
+        </View>
+    )
+}
 const styles = StyleSheet.create({
     image: {
-        width: 40,
-        height: 40,
+        width: 30,
+        height: 30,
         borderRadius: 50,
+        marginRight: 10,
     },
     inputController: {
-        height: 100,
+        height: 50,
         width: '100%',
-        backgroundColor: 'green'
+        paddingHorizontal: 20,
+        flexDirection: 'row'
     },
     chatMessages: {
-        paddingHorizontal: 8,
-        alignItems: 'flex-start'
+        padding: 8,
+        paddingHorizontal: 15,
     },
     chatMessage: {
-        backgroundColor: 'green',
-        padding: 10,
-        maxWidth: '50%',
-        borderRadius: 14,
+        flexDirection: 'row',
+        backgroundColor: '#40ad40',
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        maxWidth: '65%',
+        borderRadius: 20,
+    },
+    chatText: {
+        color: '#fff',
+        fontSize: 16
+    },
+    input: {
+        borderRadius: 500,
+        borderWidth: 1,
+        borderColor: '#d3d3d3',
+        borderStyle: 'solid',
+        padding: 15,
+        height: 50,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%'
+    },
+    circleAvatar: {
+        width: 30,
+        height: 30,
+        backgroundColor: 'lightblue',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    notSelf: {
+        backgroundColor: '#efefef'
     }
 })
