@@ -27,14 +27,18 @@ export const LoginScreen: React.FC = () => {
 
 
     useEffect(() => {
-        if (user) navigation.navigate('Chat' as never)
-    }, [user])
+        auth().onAuthStateChanged((user) => {
+            if(user) navigation.navigate('Chat' as never)
+        })
+    }, [])
 
     const handleSignin = async () => {
         setLoading(true)
         try {
-            const userGotten = await auth()
-                .createUserWithEmailAndPassword(username, password)
+            const userGotten = authType === 'signup' ? 
+                await auth().createUserWithEmailAndPassword(username, password) :
+                await auth().signInWithEmailAndPassword(username, password)
+
 
             if (userGotten) {
                 setUser(userGotten)
@@ -81,7 +85,7 @@ export const LoginScreen: React.FC = () => {
 
                     <TextInput
                         style={[styles.input, { marginBottom: 10, marginTop: 15 }]}
-                        placeholder="Username"
+                        placeholder="Email Address"
                         onChangeText={(text) => setUsername(text)}
                         value={username}
                         onFocus={() => setError('')}

@@ -4,7 +4,6 @@ import { useNavigation } from '@react-navigation/core'
 
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
 import { ScrollView } from 'react-native-gesture-handler'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 export const ChatScreen = () => {
     const [user, setUser] = useState<FirebaseAuthTypes.User>()
@@ -24,15 +23,13 @@ export const ChatScreen = () => {
 
     const handleLogout = () => {
         auth().signOut()
-        // navigator.navigate('Login' as never)
     }
 
     return (
-        <SafeAreaView>
-            <Text>ChatScreen</Text>
+        <ScrollView style = {{flex: 1}}>
             <Pressable onPress={handleLogout}><Text>Logout</Text></Pressable>
             <Text>{JSON.stringify(user, null, 3)}</Text>
-        </SafeAreaView>
+        </ScrollView>
     )
 }
 
