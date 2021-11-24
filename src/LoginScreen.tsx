@@ -59,7 +59,7 @@ export const LoginScreen: React.FC = () => {
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, }}>
+        <SafeAreaView style={{ flex: 1,backgroundColor: 'white' }}>
             <View style={styles.container}>
                 <View>
                     <Text style={styles.heading}>
