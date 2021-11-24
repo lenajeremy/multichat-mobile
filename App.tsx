@@ -13,6 +13,7 @@ const App = () => {
     <NavigationContainer>
       <StackNavigator.Navigator
         initialRouteName='Chat'
+        screenOptions={{ headerShown: false }}
       >
         <StackNavigator.Screen
           name="Login"
