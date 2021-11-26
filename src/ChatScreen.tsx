@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { FlatList, Image, StatusBar, StyleSheet, Text, View } from 'react-native'
+import { Alert, FlatList, Image, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native'
 import { TextInput } from 'react-native-gesture-handler'
 
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
@@ -33,10 +33,10 @@ export const ChatScreen = ({ navigation }) => {
         return authChangeSubscriber
     }, [])
 
-    const sendMessage = (e) => {
+    const sendMessage = () => {
         if (textMessage) {
             db().ref('messages').push({
-                text: e.nativeEvent.text,
+                text: textMessage,
                 sender: { id: user?.uid, image: user?.photoURL, letter: user?.email?.charAt(0) },
                 createdAt: Date.now(),
             })
@@ -52,8 +52,10 @@ export const ChatScreen = ({ navigation }) => {
                 contentContainerStyle={styles.chatMessages}
                 keyExtractor={(item) => item.createdAt}
                 data={messages}
+                ref={ref => this.flatListRef = ref}
                 renderItem={({ item }) => <ChatMessage message={item} />}
                 ListFooterComponent={() => <View></View>}
+                onContentSizeChange={() => this.flatListRef.scrollToEnd()}
             />
             <InputController {...{ inputRef, sendMessage, setTextMessage, textMessage }} />
         </SafeAreaView>
@@ -70,13 +72,16 @@ const InputController: React.FC<InputControllerProps> = ({ inputRef, sendMessage
     return (
         <View style={styles.inputController}>
             <TextInput
-            style = {styles.input}
+                multiline
+                style={styles.input}
                 ref={inputRef}
                 placeholder='Send message'
-                onSubmitEditing={sendMessage}
                 onChangeText={setTextMessage}
                 value={textMessage}
             />
+            <Pressable onPress={sendMessage} style={styles.inputButton}>
+                <Text style={{ color: 'white', fontSize: 16 }}>Send</Text>
+            </Pressable>
         </View>
     )
 }
@@ -85,30 +90,30 @@ const ChatMessage = ({ message }) => {
     const isSelf = message.sender.id === auth().currentUser?.uid
 
     return (
-        <View style = {{
-            flexDirection: 'row', 
-            alignItems: 'flex-start', 
-            marginVertical: 10,
+        <View style={{
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            marginVertical: 7,
             alignSelf: isSelf ? 'flex-end' : 'flex-start'
         }}>
             {
-                !isSelf ? 
-                message.sender.image ? 
-                <Image style={styles.image} source={{ uri: message.sender.image }} /> :
-                <CircleAvatar letter = {message.sender.letter}/> :
-                null
+                !isSelf ?
+                    message.sender.image ?
+                        <Image style={styles.image} source={{ uri: message.sender.image }} /> :
+                        <CircleAvatar letter={message.sender.letter} /> :
+                    null
             }
             <View style={[styles.chatMessage, !isSelf && styles.notSelf]}>
-                <Text style={[styles.chatText, !isSelf && {color: 'black'}]}>{message.text}</Text>
+                <Text style={[styles.chatText, !isSelf && { color: 'black' }]}>{message.text}</Text>
             </View>
         </View>
     )
 }
 
-const CircleAvatar : React.FC<{letter: string}> = ({letter}) => {
+const CircleAvatar: React.FC<{ letter: string }> = ({ letter }) => {
     return (
-        <View style = {[styles.image, styles.circleAvatar]}>
-            <Text style ={{fontSize: 16}}>{letter.toUpperCase()}</Text>
+        <View style={[styles.image, styles.circleAvatar]}>
+            <Text style={{ fontSize: 16 }}>{letter.toUpperCase()}</Text>
         </View>
     )
 }
@@ -151,7 +156,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        width: '100%'
+        width: '85%',
     },
     circleAvatar: {
         width: 30,
@@ -162,5 +167,14 @@ const styles = StyleSheet.create({
     },
     notSelf: {
         backgroundColor: '#efefef'
+    },
+    inputButton: {
+        width: '15%',
+        height: 50,
+        backgroundColor: '#40ad40',
+        borderRadius: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: 5
     }
 })

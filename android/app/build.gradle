@@ -147,6 +147,13 @@ android {
         }
     }
     signingConfigs {
+        release {
+            storeFile file('multichat.keystore')
+            storePassword 'password'
+            keyAlias 'password'
+            keyPassword 'password'
+        }
+
         debug {
             storeFile file('debug.keystore')
             storePassword 'android'
