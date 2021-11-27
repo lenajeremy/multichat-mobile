@@ -3,13 +3,36 @@ import { Alert, FlatList, Image, Pressable, StatusBar, StyleSheet, Text, View } 
 import { TextInput } from 'react-native-gesture-handler'
 
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth'
-import db from '@react-native-firebase/database'
+import db, { FirebaseDatabaseTypes } from '@react-native-firebase/database'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 
+
+type Message = {
+    text: string
+    createdAt: number,
+    senderImage?: string,
+    senderLetter?: string,
+    senderId: string
+}
+
+function getMessageFromSnapshot(snapshot: FirebaseDatabaseTypes.DataSnapshot): Message {
+    const snapShotValues: any = snapshot.val()
+
+    const returnMessage = {
+        text: snapShotValues.text,
+        createdAt: snapShotValues.createdAt,
+        senderImage: snapShotValues.sender.image,
+        senderLetter: snapShotValues.sender.letter,
+        senderId: snapShotValues.sender.id
+    }
+
+    return returnMessage;
+}
+
 export const ChatScreen = ({ navigation }) => {
     const [user, setUser] = useState<FirebaseAuthTypes.User>()
-    const [messages, setMessages] = useState<any>([])
+    const [messages, setMessages] = useState<Message[]>([])
     const [textMessage, setTextMessage] = useState<string>('')
 
 
@@ -17,9 +40,10 @@ export const ChatScreen = ({ navigation }) => {
 
     useEffect(() => {
 
-        db().ref('/messages').on('child_added', snapshot => {
-            setMessages(messages => [...messages, snapshot.val()])
-            setTextMessage('')
+        const messageChangeSubscriber = db().ref('messages').on('child_added', snapshot => {
+            const messagesToSet = getMessageFromSnapshot(snapshot)
+            setMessages(messages => [...messages, messagesToSet])
+            // console.log(messagesToSet)
         })
 
         const authChangeSubscriber =
@@ -30,19 +54,26 @@ export const ChatScreen = ({ navigation }) => {
                 })
 
 
-        return authChangeSubscriber
+        return () => {
+            authChangeSubscriber();
+            db().ref('messages').off('child_added', messageChangeSubscriber)
+        }
     }, [])
 
     const sendMessage = () => {
         if (textMessage) {
             db().ref('messages').push({
                 text: textMessage,
-                sender: { id: user?.uid, image: user?.photoURL, letter: user?.email?.charAt(0) },
+                sender: {
+                    id: user?.uid,
+                    [user?.photoURL ? 'image' : 'letter']:
+                        user?.photoURL || user?.email?.charAt(0)
+                },
                 createdAt: Date.now(),
             })
         }
         setTextMessage('')
-        inputRef.current.focus()
+        inputRef.current?.focus()
     }
 
     return (
@@ -50,7 +81,7 @@ export const ChatScreen = ({ navigation }) => {
             <StatusBar barStyle='light-content' />
             <FlatList
                 contentContainerStyle={styles.chatMessages}
-                keyExtractor={(item) => item.createdAt}
+                keyExtractor={(item) => item.createdAt.toString()}
                 data={messages}
                 ref={ref => this.flatListRef = ref}
                 renderItem={({ item }) => <ChatMessage message={item} />}
@@ -85,9 +116,9 @@ const InputController: React.FC<InputControllerProps> = ({ inputRef, sendMessage
         </View>
     )
 }
-const ChatMessage = ({ message }) => {
+const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
 
-    const isSelf = message.sender.id === auth().currentUser?.uid
+    const isSelf = message.senderId === auth().currentUser?.uid
 
     return (
         <View style={{
@@ -98,14 +129,21 @@ const ChatMessage = ({ message }) => {
         }}>
             {
                 !isSelf ?
-                    message.sender.image ?
-                        <Image style={styles.image} source={{ uri: message.sender.image }} /> :
-                        <CircleAvatar letter={message.sender.letter} /> :
+                    message.senderImage ?
+                        <Image style={styles.image} source={{ uri: message.senderImage }} /> :
+                        <CircleAvatar letter={message.senderLetter as string} /> :
                     null
             }
             <View style={[styles.chatMessage, !isSelf && styles.notSelf]}>
                 <Text style={[styles.chatText, !isSelf && { color: 'black' }]}>{message.text}</Text>
             </View>
+            {
+                isSelf ?
+                    message.senderImage ?
+                        <Image style={styles.image} source={{ uri: message.senderImage }} /> :
+                        <CircleAvatar letter={message.senderLetter as string} /> :
+                    null
+            }
         </View>
     )
 }
@@ -122,7 +160,6 @@ const styles = StyleSheet.create({
         width: 30,
         height: 30,
         borderRadius: 50,
-        marginRight: 10,
     },
     inputController: {
         height: 50,
@@ -141,6 +178,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         maxWidth: '65%',
         borderRadius: 20,
+        marginRight: 10
     },
     chatText: {
         color: '#fff',
@@ -166,7 +204,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     notSelf: {
-        backgroundColor: '#efefef'
+        backgroundColor: '#efefef',
+        marginLeft: 10,
+        marginRight: 0,
     },
     inputButton: {
         width: '15%',

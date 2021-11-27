@@ -1,25 +1,32 @@
 import React, { useEffect, useState } from 'react'
-import { SafeAreaView, Text, Platform, StyleSheet, Pressable, Alert, View, Image, ActivityIndicator } from "react-native";
+
+import {
+    SafeAreaView,
+    Text,
+    StyleSheet,
+    Pressable,
+    View,
+    Image,
+    ActivityIndicator,
+} from "react-native";
+
 import { TextInput } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/core';
+import auth from '@react-native-firebase/auth';
 
 import { FirebaseAuthTypes } from '@react-native-firebase/auth'
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 
 GoogleSignin.configure({
-    webClientId: Platform.OS === 'ios' ? '838695630643-hlemgh4f3l016kna87o5i0u1dqah0288.apps.googleusercontent.com'
-        : '838695630643-5fsf9n6ckv6lmk1dv7080sogajslqb2h.apps.googleusercontent.com'
+    webClientId: '838695630643-5fsf9n6ckv6lmk1dv7080sogajslqb2h.apps.googleusercontent.com'
 })
 
-
-import auth from '@react-native-firebase/auth';
 
 export const LoginScreen: React.FC = () => {
     const [username, setUsername] = React.useState<string>("")
     const [password, setPassword] = React.useState<string>("")
     const [error, setError] = React.useState<string>("")
-    const [user, setUser] = useState<FirebaseAuthTypes.UserCredential>()
     const [loading, setLoading] = useState<boolean>(false)
     const [authType, setAuthType] = useState<'login' | 'signup'>('signup')
 
@@ -28,22 +35,18 @@ export const LoginScreen: React.FC = () => {
 
     useEffect(() => {
         auth().onAuthStateChanged((user) => {
-            if(user) navigation.navigate('Chat' as never)
+            if (user) navigation.navigate('Chat' as never)
         })
     }, [])
 
     const handleSignin = async () => {
         setLoading(true)
         try {
-            const userGotten = authType === 'signup' ? 
+            const userGotten = authType === 'signup' ?
                 await auth().createUserWithEmailAndPassword(username, password) :
                 await auth().signInWithEmailAndPassword(username, password)
 
-
-            if (userGotten) {
-                setUser(userGotten)
-                setLoading(false)
-            }
+            if (userGotten) setLoading(false)
 
         } catch (error: any) {
             setError(error.message.split(']')[1])
@@ -52,14 +55,17 @@ export const LoginScreen: React.FC = () => {
     }
 
     const googleSignUp = async () => {
-        const { idToken } = await GoogleSignin.signIn()
-        const credential = auth.GoogleAuthProvider.credential(idToken)
-
-        return auth().signInWithCredential(credential)
+        try {
+            const { idToken } = await GoogleSignin.signIn()
+            const credential = auth.GoogleAuthProvider.credential(idToken)
+            auth().signInWithCredential(credential)
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     return (
-        <SafeAreaView style={{ flex: 1,backgroundColor: 'white' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
             <View style={styles.container}>
                 <View>
                     <Text style={styles.heading}>
@@ -68,6 +74,7 @@ export const LoginScreen: React.FC = () => {
                 </View>
 
                 <View style={styles.form}>
+
                     <Pressable
                         onPress={googleSignUp}
                         style={({ pressed }) => [styles.input, pressed && styles.pressedButton]}
@@ -99,11 +106,11 @@ export const LoginScreen: React.FC = () => {
                         secureTextEntry={true}
                         onFocus={() => setError('')}
                     />
-                    <Pressable 
+                    <Pressable
                         onPress={() => setAuthType(authType === 'login' ? 'signup' : 'login')}
-                        style = {{marginBottom: 15}}
+                        style={{ marginBottom: 15 }}
                     >
-                        <Text style ={{color: '#40ad40', fontWeight: '500', fontSize: 15}}>
+                        <Text style={{ color: '#40ad40', fontWeight: '500', fontSize: 15 }}>
                             {authType === 'signup' ? 'Already have an account? Sign in' : 'Don\'t have an account? Sign up'}
                         </Text>
                     </Pressable>
